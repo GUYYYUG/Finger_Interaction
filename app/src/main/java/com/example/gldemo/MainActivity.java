@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
 //                mGLView.MyDraw(gokuRenderer, 0, 0+last_angles[2],0+last_angles[1]);
 //                mGLView.MyDraw(gokuRenderer, 45+last_angles[2], 0,90+last_angles[1]);
                 //1->pitch 2->roll 3->yaw
-                mGLView.MyDraw(gokuRenderer, 0, 0,90+last_angles[1],1);
+                mGLView.MyDraw(gokuRenderer, 0, 0,last_angles[1],1);
 //                mGLView.MyDraw(gokuRenderer, 90, 0,0);
                 Log.v("abs",String.format("yaw: %.2f,pitch:%.2f",last_angles[1],last_angles[2] ));
             }

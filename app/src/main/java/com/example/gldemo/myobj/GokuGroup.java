@@ -25,6 +25,7 @@ public class GokuGroup extends GLGroup {
     private ArrayList<ObjInfo> objDatas;
     private ArrayList<GLEntity> mObjSprites = new ArrayList<GLEntity>();
     private float rotate_info[] = {0,0,1,0};
+    private float[] last_Matrix;
     public int mmode = 0;
     public GokuGroup(PlaneGlSurfaceView scene,int type) {
         super(scene);
@@ -138,14 +139,21 @@ public class GokuGroup extends GLGroup {
 //        matrixState.rotate(this.getSpriteAngleX(), 1, 0, 0);//x axis
 //        matrixState.rotate(this.getSpriteAngleZ(), 0, 0, 1);//z axis
         //rotate
-        if(mmode==0){
-            matrixState.rotate(rotate_info[3],0,1,0);
-            matrixState.rotate(rotate_info[3],0,0,1);
-            matrixState.rotate(rotate_info[3],1,0,0);
+        if(mmode==0){ //初始随机转
+//            matrixState.rotate(-90f,0,0,1); // pitch
+            matrixState.rotate(rotate_info[3],0,1,0); // yaw
+
+            matrixState.rotate(rotate_info[3],1,0,0); // roll
+            // 记录最后一帧的姿态矩阵
+            last_Matrix = matrixState.getMMatrix().clone();
         }
         else if(mmode == 1) //yaw
         {
-            matrixState.rotate(rotate_info[3],0,1,0);
+            //把当前矩阵的姿态矩阵设置为之前最后一帧的姿态矩阵，然后根据此进行旋转
+            matrixState.setCurrMatrix(last_Matrix);
+            Log.e("PrintDemo",Arrays.toString(last_Matrix));
+            //随便转转
+            matrixState.rotate(rotate_info[3],0,0,1);
 //            Log.i("PrintDemo", Arrays.toString(matrixState.getMMatrix()));
 //            matrixState.rotate(90,0,0,1);
 //            matrixState.rotate(90,1,0,0);

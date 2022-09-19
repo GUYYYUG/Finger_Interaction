@@ -147,16 +147,16 @@ public class GokuRenderer implements GLSurfaceView.Renderer {
             matrixState.pushMatrix();
             // ondraw frame
             mSpriteGroup.onDraw(matrixState);
-            Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
+//            Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
 
             matrixState.popMatrix();
-            Log.e("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
+//            Log.e("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
         }else{
             matrixState.pushMatrix();
             mSpriteGroup.onDraw(matrixState);
-            Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
+//            Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
             matrixState.popMatrix();
-            Log.e("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
+//            Log.e("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
         }
 //        Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
 

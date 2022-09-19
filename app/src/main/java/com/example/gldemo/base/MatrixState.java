@@ -26,9 +26,9 @@ public class MatrixState {
     //保护变换矩阵的栈
     public Stack<float[]> mStack = new Stack<float[]>();
 
-    public void setCurrMatrix(MatrixState m)
+    public void setCurrMatrix(float[] m)
     {
-        currMatrix = m.getMMatrix();
+        currMatrix = m.clone();
     }
 
     public void setInitStack()//获取不变换初始矩阵

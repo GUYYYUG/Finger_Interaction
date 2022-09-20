@@ -47,10 +47,15 @@ public class MainActivity extends AppCompatActivity {
             {mdata.test[100][0],mdata.test[100][1],mdata.test[100][2]}
     };
     private float init_pose[] = {30,40,50};
+    private float init_yaw = 0.0f;
+    private float init_roll_pitch = 0.0f;
+    private float delta_yaw = 0.0f;
+    private float delta_roll_pitch = 0.0f;
     private int e_cnt = 0;
     private float target[]=new float[]{
             ((float)Math.random()-0.5f)*90,((float)Math.random()-0.5f)*90,((float)Math.random()-0.5f)*90
     };
+    private int mode = -1;
     private float last_yaw = 0.0f;
     private float last_pitch = 0.0f;
     private float now_yaw = 0.0f;
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean relatiive_mode_first_type = true;
     private boolean first_abs = true;
     private boolean first_rela = true;
+    private boolean isrun= true;
     private TextView txtRcv;
     //
     private GokuRenderer gokuRenderer;
@@ -94,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
             float[] last_angles = mdata.test[cnt];
+            readFile("/Download/mypose.txt");
             if (relative_mode){
                 //first type
                 if(relatiive_mode_first_type){
@@ -105,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 //                    mGLView.MyDraw(gokuRenderer, -90 + now_pitch+ 15.0f, 0, -now_yaw); //still
 //                    mGLView.MyDraw(gokuRenderer, 0, now_pitch, now_yaw);
                     mGLView.MyDraw(gokuRenderer,  0+now_pitch, 0,90+now_yaw,1);
+//                    mGLView.MyDraw(gokuRenderer, 0, delta_roll_pitch,delta_yaw,mode);
                     Log.e("rela_first",String.format("yaw: %.2f,pitch:%.2f",now_yaw,now_pitch));
 
 
@@ -119,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
 //                    mGLView.MyDraw(gokuRenderer, -90 + now_pitch+ 15.0f, 0, -now_yaw);
                     //1->pitch 2->roll 3->yaw
                     mGLView.MyDraw(gokuRenderer,  0+now_pitch, 0,90+now_yaw,1);
+//                    mGLView.MyDraw(gokuRenderer, 0, delta_roll_pitch,delta_yaw,mode);
                     Log.v("rela",String.format("yaw: %.2f,pitch:%.2f",now_yaw,now_pitch));
                 }
             }else {
@@ -128,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
 //                mGLView.MyDraw(gokuRenderer, 45+last_angles[2], 0,90+last_angles[1]);
                 //1->pitch 2->roll 3->yaw
                 mGLView.MyDraw(gokuRenderer, 0, 0,last_angles[1],1);
+//                mGLView.MyDraw(gokuRenderer, 0, delta_roll_pitch,delta_yaw,mode);
 //                mGLView.MyDraw(gokuRenderer, 90, 0,0);
                 Log.v("abs",String.format("yaw: %.2f,pitch:%.2f",last_angles[1],last_angles[2] ));
             }
@@ -217,16 +227,46 @@ public class MainActivity extends AppCompatActivity {
             Log.v("content",result);
             fileinput.close();
             String haha = "??????";
-//            OutputStream outputData = socket.getOutputStream();
-//            FileInputStream fileInput = new FileInputStream(path);
-//            int size = -1;
 
-//            byte[] buffer = new byte[1024];
-//            while((size = fileInput.read(buffer, 0, 1024)) != -1){
-//                outputData.write(buffer, 0, size);
-//            }
-//            outputData.close();
-//            fileInput.close();
+            String [] arr = result.split("\\s+");
+            for(int i = 0;i<arr.length;i++){
+                System.out.println(arr[i]);
+                if(i==2||i==3){
+                    float yaw = Float.parseFloat(arr[i]);
+                    System.out.println(yaw);
+                }
+            }
+            if(arr[0].equals("init")){
+                if(arr[1].equals("yaw")){
+                    init_yaw = Float.parseFloat(arr[2]);
+                    mode = 1;
+                }else if(arr[1].equals("pitch")){
+                    init_roll_pitch = Float.parseFloat(arr[3]);
+                    mode =2;
+                }else if(arr[1].equals("roll")){
+                    init_roll_pitch = Float.parseFloat(arr[3]);
+                    mode = 3;
+                }else{
+                    ;
+                }
+                isrun = true;
+            }
+            else if(arr[0].equals("null")){
+                if(isrun){
+                    mode = 4;
+                }
+                else{
+                    mode = 5;
+                }
+
+            }
+            else{
+                delta_yaw = Float.parseFloat(arr[0]) - init_yaw;
+                delta_roll_pitch = Float.parseFloat(arr[1]) - init_roll_pitch;
+
+            }
+
+
 
         }catch (FileNotFoundException e){
             Log.w("warning","no find22222");

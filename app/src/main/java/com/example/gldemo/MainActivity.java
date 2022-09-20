@@ -136,10 +136,11 @@ public class MainActivity extends AppCompatActivity {
 //                mGLView.MyDraw(gokuRenderer, 0, 0+last_angles[2],0+last_angles[1]);
 //                mGLView.MyDraw(gokuRenderer, 45+last_angles[2], 0,90+last_angles[1]);
                 //1->pitch 2->roll 3->yaw
-                mGLView.MyDraw(gokuRenderer, 0, 0,last_angles[1],1);
-//                mGLView.MyDraw(gokuRenderer, 0, delta_roll_pitch,delta_yaw,mode);
+//                mGLView.MyDraw(gokuRenderer, 0, 0,last_angles[1],1);
+
+                mGLView.MyDraw(gokuRenderer, 0,delta_roll_pitch,delta_yaw,mode);
 //                mGLView.MyDraw(gokuRenderer, 90, 0,0);
-                Log.v("abs",String.format("yaw: %.2f,pitch:%.2f",last_angles[1],last_angles[2] ));
+                Log.e("delta",String.format("yaw: %.2f,pitch:%.2f,mode:%d",delta_yaw,delta_roll_pitch ,mode));
             }
             startTime();//执行计时方法
             float e1 = (float)Math.abs(mdata.test[cnt][0]-ee[e_cnt][0]);
@@ -161,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "absolute control start", Toast.LENGTH_SHORT).show();
                 }
             }
-            if(sum<=1.0f){
+            if(sum<=-1f){
                 stopTime();
                 endTime = System.currentTimeMillis(); //结束时间
                 timearr.add(endTime - startTime);
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
 //                                    stopTime();
-                                e_cnt ++;
+//                                e_cnt ++;
                                 otherGLView.MyDraw(otherRenderer,ee[e_cnt][0],ee[e_cnt][1],ee[e_cnt][2],1);
                                 cnt = 0;
 
@@ -224,56 +225,98 @@ public class MainActivity extends AppCompatActivity {
             FileInputStream fileinput = new FileInputStream(file);
             fileinput.read(buff);
             result = new String(buff,"UTF-8");
+            if (result.length() == 0){
+                mode = 8;
+                return;
+            }
             Log.v("content",result);
             fileinput.close();
             String haha = "??????";
 
             String [] arr = result.split("\\s+");
-            for(int i = 0;i<arr.length;i++){
-                System.out.println(arr[i]);
-                if(i==2||i==3){
-                    float yaw = Float.parseFloat(arr[i]);
-                    System.out.println(yaw);
-                }
-            }
-            if(arr[0].equals("init")){
-                if(arr[1].equals("yaw")){
-                    init_yaw = Float.parseFloat(arr[2]);
+//            for(int i = 0;i<arr.length;i++){
+//                System.out.println(arr[i]);
+//                if(i==2||i==3){
+//                    float yaw = Float.parseFloat(arr[i]);
+//                    System.out.println(yaw);
+//                }
+//            }
+            if(arr.length == 3){
+                //yaw,pitch,roll
+                if (Float.parseFloat(arr[0])!=0){
+                    delta_yaw = Float.parseFloat(arr[0]);
                     mode = 1;
-                }else if(arr[1].equals("pitch")){
-                    init_roll_pitch = Float.parseFloat(arr[3]);
-                    mode =2;
-                }else if(arr[1].equals("roll")){
-                    init_roll_pitch = Float.parseFloat(arr[3]);
+                }else if(Float.parseFloat(arr[1])!=0){
+                    delta_roll_pitch = Float.parseFloat(arr[1]);
+                    mode = 2;
+                }else if(Float.parseFloat(arr[2])!=0){
+                    delta_roll_pitch = Float.parseFloat(arr[2]);
                     mode = 3;
-                }else{
-                    ;
-                }
-                isrun = true;
-            }
-            else if(arr[0].equals("null")){
-                if(isrun){
+                }else if(Float.parseFloat(arr[0]) ==0 && Float.parseFloat(arr[1]) ==0 && Float.parseFloat(arr[2]) ==0){
                     mode = 4;
+                    return;
+                }else{
+                    mode = 7;
+                    return;
                 }
-                else{
-                    mode = 5;
-                }
-
             }
             else{
-                delta_yaw = Float.parseFloat(arr[0]) - init_yaw;
-                delta_roll_pitch = Float.parseFloat(arr[1]) - init_roll_pitch;
-
+                mode = 8;
+                return;
             }
+//            if(arr[0].equals("init")){
+//                if(arr[1].equals("yaw")){
+//                    init_yaw = Float.parseFloat(arr[2]);
+//                    mode = 1;
+//                }else if(arr[1].equals("pitch")){
+//                    init_roll_pitch = Float.parseFloat(arr[3]);
+//                    mode =2;
+//                }else if(arr[1].equals("roll")){
+//                    init_roll_pitch = Float.parseFloat(arr[3]);
+//                    mode = 3;
+//                }else{
+//                    ;
+//                }
+//                isrun = true;
+//            }
+//            else if(arr[0].equals("null")){
+//                if(isrun){
+//                    mode = 4;
+//                    isrun = false;
+//                }
+//                else{
+//                    mode = 5;
+//                }
+//
+//            }
+//            else if(arr[0].length()>0){
+//                delta_yaw = Float.parseFloat(arr[0]) - init_yaw;
+//                delta_roll_pitch = Float.parseFloat(arr[1]) - init_roll_pitch;
+//
+//            }
 
 
 
         }catch (FileNotFoundException e){
             Log.w("warning","no find22222");
+//            if(isrun){
+//                mode = 4;
+//                isrun = false;
+//            }
+//            else{
+//                mode = 5;
+//            }
+            mode = 8;
+            return ;
+
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            mode = 8;
+            return ;
         } catch (IOException e) {
-            e.printStackTrace();
+            mode = 8;
+//            e.printStackTrace();
+            return ;
         }
     }
     /**开始计时方法*/
@@ -283,14 +326,14 @@ public class MainActivity extends AppCompatActivity {
         task = new TimerTask() {
             @Override
             public void run() {
-                cnt++;
+//                cnt++;
                 Message message = handler.obtainMessage();//获取Message对象
                 message.arg1 = cnt;//设置Message对象附带的参数
                 handler.sendMessage(message);//向主线程发送消息
 
             }
         };
-        timer.schedule(task, 50);//执行计时器事件
+        timer.schedule(task, 20);//执行计时器事件
     };
     /**停止计时方法*/
     private void stopTime(){
@@ -328,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
         otherGLView.setRenderer(otherRenderer);
         otherGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 //        otherGLView.MyDraw(otherRenderer,-90f+15f+mdata.test[190][2],mdata.test[190][2],mdata.test[190][1]);
-        otherGLView.MyDraw(otherRenderer,0,0,90f,5);
+        otherGLView.MyDraw(otherRenderer,0,0,90f,6);
 //        otherGLView.MyDraw(otherRenderer,0,0,90f,2);
         Button buttonOpengl = (Button) findViewById(R.id.openglDemo);
         readFile("/Download/mypose.txt");

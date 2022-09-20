@@ -27,10 +27,11 @@ public class GokuGroup extends GLGroup {
     private ArrayList<GLEntity> mObjSprites = new ArrayList<GLEntity>();
     private float rotate_info[] = {0,0,1,0};
 
-    private float[] new_matrix = new float[16];
+    private float[] new_matrix = null;
     private float[] last_Matrix = new float[16];
     private float[] ex_matrix = new float[16];
     private float[] single_rotate_matrix = new float[16];
+    private float[] frame = new float[16];
     public int mmode = 0;
     public GokuGroup(PlaneGlSurfaceView scene,int type) {
         super(scene);
@@ -163,6 +164,7 @@ public class GokuGroup extends GLGroup {
             // 记录最后一帧的姿态矩阵
 //            matrixState.setCurrMatrix(ex_matrix);
             last_Matrix = matrixState.getMMatrix().clone();
+            frame = matrixState.getMMatrix().clone();
 
             Log.e("in_matrix========",Arrays.toString(last_Matrix));
         }
@@ -172,11 +174,14 @@ public class GokuGroup extends GLGroup {
             matrixState.setCurrMatrix(last_Matrix);
             Log.e("PrintDemo",Arrays.toString(last_Matrix));
             //随便转转
-            Matrix.setRotateM(single_rotate_matrix,0,rotate_info[3],0,1,0);
+            Log.e("single",Arrays.toString(single_rotate_matrix));
+            Matrix.setRotateM(single_rotate_matrix,0,-rotate_info[3],0,1,0);
             Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
+            Log.e("single after",Arrays.toString(single_rotate_matrix));
 //            matrixState.rotate(rotate_info[3],0,0,1);
             matrixState.setCurrMatrix(single_rotate_matrix.clone());
-            new_matrix = matrixState.getFinalMatrix().clone();
+            new_matrix = matrixState.getMMatrix().clone();
+            frame = matrixState.getMMatrix().clone();
 
         }
         else if(mmode == 2) //pitch
@@ -189,7 +194,8 @@ public class GokuGroup extends GLGroup {
             Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
 //            matrixState.rotate(rotate_info[3],0,0,1);
             matrixState.setCurrMatrix(single_rotate_matrix.clone());
-            new_matrix = matrixState.getFinalMatrix().clone();
+            new_matrix = matrixState.getMMatrix().clone();
+            frame = matrixState.getMMatrix().clone();
         }
         else if(mmode == 3) //roll
         {
@@ -197,17 +203,36 @@ public class GokuGroup extends GLGroup {
             matrixState.setCurrMatrix(last_Matrix);
             Log.e("PrintDemo",Arrays.toString(last_Matrix));
             //随便转转
-            Matrix.setRotateM(single_rotate_matrix,0,rotate_info[2],0,0,1);
+            Matrix.setRotateM(single_rotate_matrix,0,-rotate_info[2],0,0,1);
             Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
 //            matrixState.rotate(rotate_info[3],0,0,1);
             matrixState.setCurrMatrix(single_rotate_matrix.clone());
-            new_matrix = matrixState.getFinalMatrix().clone();
+            new_matrix = matrixState.getMMatrix().clone();
+            frame = matrixState.getMMatrix().clone();
         }
         else if(mmode == 4) //当一段动作停止后，记录最后一帧的旋转矩阵
         {
-            last_Matrix = new_matrix.clone();
-            matrixState.setCurrMatrix(last_Matrix.clone());
+            if( new_matrix == null){
+                matrixState.setCurrMatrix(last_Matrix.clone());
+
+            }else {
+//                Log.e("last",Arrays.toString(last_Matrix));
+
+                Log.e("last after",Arrays.toString(new_matrix));
+                matrixState.setCurrMatrix(new_matrix.clone());
+                last_Matrix = new_matrix.clone();
+                frame = matrixState.getMMatrix().clone();
+            }
+//            matrixState.setCurrMatrix(last_Matrix.clone());
         }
+        else if(mmode == 6){
+            matrixState.rotate(90,0,1,0);
+        }
+        else if (mmode == 8) {//not exist
+            matrixState.setCurrMatrix(frame.clone());
+        }
+
+
         else
         {
             matrixState.setCurrMatrix(last_Matrix.clone());

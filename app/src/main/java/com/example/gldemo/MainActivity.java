@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             float e1 = (float)Math.abs(target_pose[0]+current_pose[0]);
             float e2 = (float)Math.abs(target_pose[1]+current_pose[1]);
             float e3 = (float)Math.abs(target_pose[2]+current_pose[2]);
+            Log.e("error,yaw,pitch,roll",String.format("yaw_error: %.2f,pitch_error:%.2f,roll_errore:%.2f",e1,e2,e3));
             float sum = e1+e2+e3;
 
             if(sum<=10.0f){

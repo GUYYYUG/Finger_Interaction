@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,6 +68,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean first_abs = true;
     private boolean first_rela = true;
     private boolean isrun= true;
+
+    private float[] target_pose = {0.0f,0.0f,0.0f}; //target pose : yaw,pitch,roll
+    private float[] current_pose = {0.0f,0.0f,0.0f}; // target pose: yaw,pitch,roll
+    private float[] temp = {0.0f,0.0f,0.0f};
+
+
     private TextView txtRcv;
     //
     private GokuRenderer gokuRenderer;
@@ -143,10 +150,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("delta",String.format("yaw: %.2f,pitch:%.2f,mode:%d",delta_yaw,delta_roll_pitch ,mode));
             }
             startTime();//执行计时方法
-            float e1 = (float)Math.abs(mdata.test[cnt][0]-ee[e_cnt][0]);
-            float e2 = (float)Math.abs(mdata.test[cnt][1]-ee[e_cnt][1]);
-            float e3 = (float)Math.abs(mdata.test[cnt][2]-ee[e_cnt][2]);
-            float sum = e2+e3;
+            float e1 = (float)Math.abs(target_pose[0]+current_pose[0]);
+            float e2 = (float)Math.abs(target_pose[1]+current_pose[1]);
+            float e3 = (float)Math.abs(target_pose[2]+current_pose[2]);
+            float sum = e1+e2+e3;
 
             if(sum<=10.0f){
                 relative_mode = false;
@@ -162,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "absolute control start", Toast.LENGTH_SHORT).show();
                 }
             }
-            if(sum<=-1f){
+            if(e1<=5f && e2 <=5f && e3 <= 5f){
                 stopTime();
                 endTime = System.currentTimeMillis(); //结束时间
                 timearr.add(endTime - startTime);
@@ -176,10 +183,14 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
 //                                    stopTime();
 //                                e_cnt ++;
-                                otherGLView.MyDraw(otherRenderer,ee[e_cnt][0],ee[e_cnt][1],ee[e_cnt][2],1);
-                                cnt = 0;
-
-                                mGLView.MyDraw(gokuRenderer,mdata.test[cnt][0],mdata.test[cnt][1],mdata.test[cnt][2],1);
+//                                otherGLView.MyDraw(otherRenderer,ee[e_cnt][0],ee[e_cnt][1],ee[e_cnt][2],1);
+//                                cnt = 0;
+                                // random pose
+                                Random r = new Random();
+                                target_pose[0] = -90f + r.nextFloat()*180f ;
+                                target_pose[1] = -90f + r.nextFloat()*180f ;
+                                target_pose[2] = -90f + r.nextFloat()*180f ;
+                                mGLView.MyDraw(gokuRenderer,target_pose[0],target_pose[1],target_pose[2],0);
                             }
                         })
                         .setNegativeButton("no", new DialogInterface.OnClickListener() {//添加返回按钮
@@ -245,15 +256,24 @@ public class MainActivity extends AppCompatActivity {
                 //yaw,pitch,roll
                 if (Float.parseFloat(arr[0])!=0){
                     delta_yaw = Float.parseFloat(arr[0]);
+                    temp[0] = delta_yaw;
                     mode = 1;
                 }else if(Float.parseFloat(arr[1])!=0){
                     delta_roll_pitch = Float.parseFloat(arr[1]);
+                    temp[1] = delta_roll_pitch;
                     mode = 2;
                 }else if(Float.parseFloat(arr[2])!=0){
                     delta_roll_pitch = Float.parseFloat(arr[2]);
+                    temp[2] = delta_roll_pitch;
                     mode = 3;
                 }else if(Float.parseFloat(arr[0]) ==0 && Float.parseFloat(arr[1]) ==0 && Float.parseFloat(arr[2]) ==0){
                     mode = 4;
+                    current_pose[0] = current_pose[0] + temp[0];
+                    current_pose[1] = current_pose[1] + temp[1];
+                    current_pose[2] = current_pose[2] + temp[2];
+                    temp[0] = 0.0f;
+                    temp[1] = 0.0f;
+                    temp[2] = 0.0f;
                     return;
                 }else{
                     mode = 7;
@@ -364,7 +384,10 @@ public class MainActivity extends AppCompatActivity {
 //        mGLView.setOnTouchListener(gokuRenderer.getTouchEventListener());
         // 1->pitch 2->roll 3->yaw
 //        mGLView.MyDraw(gokuRenderer,0+init_pose[0],0+init_pose[1],0.1f+init_pose[2],0);
-        mGLView.MyDraw(gokuRenderer,0,0,90,0);
+        target_pose[0] = -30; //yaw
+        target_pose[1] = 45; //pitch
+        target_pose[2] = -45; // row
+        mGLView.MyDraw(gokuRenderer,-30,45,-45,0);
         // 对照
         otherGLView = (PlaneGlSurfaceView)findViewById(R.id.glsv_plane2);
         otherRenderer = new GokuRenderer(otherGLView,1);

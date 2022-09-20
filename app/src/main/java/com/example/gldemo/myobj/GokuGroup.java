@@ -148,15 +148,15 @@ public class GokuGroup extends GLGroup {
         if(mmode==0){ //初始随机转
             ex_matrix = matrixState.getMMatrix().clone();
 //            matrixState.rotate(-90f,0,1,0); // yaw
-            matrixState.rotate(45,1,0,0); // roll
-            matrixState.rotate(-45,0,0,1); // yaw
-            matrixState.rotate(-30,0,1,0); // yaw
+            matrixState.rotate(rotate_info[2],1,0,0); // pitch
+            matrixState.rotate(rotate_info[3],0,0,1); // roll
+            matrixState.rotate(rotate_info[1],0,1,0); // yaw
 
 
 //            Matrix.setRotateM(ex_matrix, 0, 0, 1, 0, 0);
-            Matrix.rotateM(ex_matrix,0,-30,0,1,0);
-            Matrix.rotateM(ex_matrix,0,-45,0,0,1);
-            Matrix.rotateM(ex_matrix,0,45,1,0,0);
+            Matrix.rotateM(ex_matrix,0,rotate_info[1],0,1,0);
+            Matrix.rotateM(ex_matrix,0,rotate_info[3],0,0,1);
+            Matrix.rotateM(ex_matrix,0,rotate_info[2],1,0,0);
             // 1,0,0 -> pitch
             // 0,1,0 -> yaw
             // 0,0,1 -> roll

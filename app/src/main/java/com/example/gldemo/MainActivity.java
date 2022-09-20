@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -81,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
     /**开始计时方法*/
     public int cnt = 0;
     private long startTime , endTime ,runTime ;
-
+    //
+    //
+    public float[] cur_angles = new float[3];
     private Timer timer = null;
     private TimerTask task = null;
     private float yaw = 0.0f;
@@ -108,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
 //            }
             float[] last_angles = mdata.test[cnt];
             readFile("/Download/mypose.txt");
+            float[] a = new float[16];
+            float[] b = {-2.1855695E-7f, 0.0f, -5.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 5.0f, 0.0f, -2.1855695E-7f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
             if (relative_mode){
                 //first type
                 if(relatiive_mode_first_type){
@@ -146,30 +151,38 @@ public class MainActivity extends AppCompatActivity {
 //                mGLView.MyDraw(gokuRenderer, 0, 0,last_angles[1],1);
 
                 mGLView.MyDraw(gokuRenderer, 0,delta_roll_pitch,delta_yaw,mode);
+
+                a = gokuRenderer.curr.clone();
+                Log.e("curr_matrix_from_render", Arrays.toString(a));
+                get_euler(a);
+
+//                Log.e("curr_matrix_from_other", Arrays.toString(b));
+//                get_euler(b);
+
 //                mGLView.MyDraw(gokuRenderer, 90, 0,0);
-                Log.e("delta",String.format("yaw: %.2f,pitch:%.2f,mode:%d",delta_yaw,delta_roll_pitch ,mode));
+//                Log.e("delta",String.format("yaw: %.2f,pitch:%.2f,mode:%d",delta_yaw,delta_roll_pitch ,mode));
             }
             startTime();//执行计时方法
-            float e1 = (float)Math.abs(target_pose[0]+current_pose[0]);
-            float e2 = (float)Math.abs(target_pose[1]+current_pose[1]);
-            float e3 = (float)Math.abs(target_pose[2]+current_pose[2]);
+            float e1 = (float)Math.abs(cur_angles[0]+90f);
+            float e2 = (float)Math.abs(cur_angles[1]);
+            float e3 = (float)Math.abs(cur_angles[2]);
             Log.e("error,yaw,pitch,roll",String.format("yaw_error: %.2f,pitch_error:%.2f,roll_errore:%.2f",e1,e2,e3));
             float sum = e1+e2+e3;
 
-            if(sum<=10.0f){
-                relative_mode = false;
-                if(relatiive_mode_first_type){
-                    Toast.makeText(MainActivity.this,"relative control start", Toast.LENGTH_SHORT).show();
-                    relatiive_mode_first_type = false;
-                }
-            }
-            else {
-                relative_mode = false;
-                if (first_abs) {
-                    first_abs = false;
-                    Toast.makeText(MainActivity.this, "absolute control start", Toast.LENGTH_SHORT).show();
-                }
-            }
+//            if(sum<=10.0f){
+//                relative_mode = false;
+//                if(relatiive_mode_first_type){
+//                    Toast.makeText(MainActivity.this,"relative control start", Toast.LENGTH_SHORT).show();
+//                    relatiive_mode_first_type = false;
+//                }
+//            }
+//            else {
+//                relative_mode = false;
+//                if (first_abs) {
+//                    first_abs = false;
+//                    Toast.makeText(MainActivity.this, "absolute control start", Toast.LENGTH_SHORT).show();
+//                }
+//            }
             if(e1<=5f && e2 <=5f && e3 <= 5f){
                 stopTime();
                 endTime = System.currentTimeMillis(); //结束时间
@@ -216,6 +229,38 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    public void get_euler(float[] cur){
+        float[] tmp = cur.clone();
+        float[][] rotate = new float[][]{
+                {tmp[0],tmp[4],tmp[8]},
+                {tmp[1],tmp[5],tmp[9]},
+                {tmp[2],tmp[6],tmp[10]}
+        };
+        for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+                rotate[i][j] = rotate[i][j] / 5.0f;
+            }
+        }
+//        if(rotate[3][1]!=1 || rotate[3][1]!=-1){
+//
+//        }else{
+            if(Math.abs(Math.asin(rotate[2][0]))<(Math.PI-Math.asin(rotate[2][0]))){
+                cur_angles[0] = (float)Math.asin(rotate[2][0]);
+            }
+            else{
+                cur_angles[0] = (float)(Math.PI-Math.asin(rotate[2][0]));
+            }
+
+            cur_angles[1] = (float)Math.atan2(rotate[2][1]/Math.cos(cur_angles[0]),rotate[2][2]/Math.cos(cur_angles[0]));
+            cur_angles[2] = (float)Math.atan2(rotate[1][0]/Math.cos(cur_angles[0]),rotate[0][0]/Math.cos(cur_angles[0]));
+            for(int i = 0;i<3;i++){
+                cur_angles[i] = (float) Math.toDegrees(cur_angles[i]);
+            }
+
+
+//        }
+        Log.e("cur_angles",Arrays.toString(cur_angles));
+    }
 
     public void readFile(String path){
         String result;

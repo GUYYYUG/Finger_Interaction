@@ -96,6 +96,7 @@ public class GokuRenderer implements GLSurfaceView.Renderer {
 
     private int mVboBufferId;
     public boolean save_matrix = false;
+    public float[] curr = new float[16];
 
 
 
@@ -154,6 +155,7 @@ public class GokuRenderer implements GLSurfaceView.Renderer {
         }else{
             matrixState.pushMatrix();
             mSpriteGroup.onDraw(matrixState);
+            curr = mSpriteGroup.getframe().clone();
 //            Log.i("PrintDemo",Arrays.toString(matrixState.getMMatrix()));
             matrixState.popMatrix();
 //            Log.e("PrintDemo",Arrays.toString(matrixState.getMMatrix()));

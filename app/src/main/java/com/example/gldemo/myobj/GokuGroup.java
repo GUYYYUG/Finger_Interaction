@@ -32,6 +32,9 @@ public class GokuGroup extends GLGroup {
     private float[] ex_matrix = new float[16];
     private float[] single_rotate_matrix = new float[16];
     private float[] frame = new float[16];
+    public float[] getframe(){
+        return frame.clone();
+    }
     public int mmode = 0;
     public GokuGroup(PlaneGlSurfaceView scene,int type) {
         super(scene);
@@ -227,6 +230,7 @@ public class GokuGroup extends GLGroup {
         }
         else if(mmode == 6){
             matrixState.rotate(90,0,1,0);
+            Log.e("target pose",Arrays.toString(matrixState.getMMatrix().clone()));
         }
         else if (mmode == 8) {//not exist
             matrixState.setCurrMatrix(frame.clone());

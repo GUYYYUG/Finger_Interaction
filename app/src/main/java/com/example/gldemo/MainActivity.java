@@ -390,6 +390,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button buttonstop = (Button) findViewById(R.id.stopDemo);
+        buttonstop.setVisibility(View.INVISIBLE);
         buttonstop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -3,10 +3,14 @@ package com.example.gldemo;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -20,7 +24,12 @@ import com.example.gldemo.data;
 import com.example.gldemo.myobj.GokuRenderer;
 import com.example.gldemo.plane.PlaneGlSurfaceView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -184,6 +193,49 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    public void readFile(String path){
+        String result;
+        String new_path;
+        try{
+
+            String sdCardDir = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+            new_path = sdCardDir + path;
+            Log.e("path",new_path);
+            File file = new File(new_path);
+            if(!file.exists()){
+                Log.w("warning","no find");
+            }
+            Log.v("pathpath",new_path);
+            int length = (int)file.length();
+            Log.w("length",String.valueOf(length));
+            byte[] buff = new byte[length];
+            FileInputStream fileinput = new FileInputStream(file);
+            fileinput.read(buff);
+            result = new String(buff,"UTF-8");
+            Log.v("content",result);
+            fileinput.close();
+            String haha = "??????";
+//            OutputStream outputData = socket.getOutputStream();
+//            FileInputStream fileInput = new FileInputStream(path);
+//            int size = -1;
+
+//            byte[] buffer = new byte[1024];
+//            while((size = fileInput.read(buffer, 0, 1024)) != -1){
+//                outputData.write(buffer, 0, size);
+//            }
+//            outputData.close();
+//            fileInput.close();
+
+        }catch (FileNotFoundException e){
+            Log.w("warning","no find22222");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     /**开始计时方法*/
 
     private void startTime(){
@@ -213,6 +265,10 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null){
             getSupportActionBar().hide();
         }
+        if (Build.VERSION.SDK_INT>=23&&checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        }
+
 
 
         mGLView = (PlaneGlSurfaceView) findViewById(R.id.glsv_plane);
@@ -232,9 +288,10 @@ public class MainActivity extends AppCompatActivity {
         otherGLView.setRenderer(otherRenderer);
         otherGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 //        otherGLView.MyDraw(otherRenderer,-90f+15f+mdata.test[190][2],mdata.test[190][2],mdata.test[190][1]);
-        otherGLView.MyDraw(otherRenderer,0,0,90f,0);
+        otherGLView.MyDraw(otherRenderer,0,0,90f,5);
 //        otherGLView.MyDraw(otherRenderer,0,0,90f,2);
         Button buttonOpengl = (Button) findViewById(R.id.openglDemo);
+        readFile("/Download/mypose.txt");
 
         txtRcv = (TextView) findViewById(R.id.TextView3);
 

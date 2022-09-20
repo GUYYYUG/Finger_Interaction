@@ -16,6 +16,7 @@ import com.example.gldemo.plane.PlaneGlSurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import android.opengl.Matrix;
 
 
 public class GokuGroup extends GLGroup {
@@ -26,6 +27,8 @@ public class GokuGroup extends GLGroup {
     private ArrayList<GLEntity> mObjSprites = new ArrayList<GLEntity>();
     private float rotate_info[] = {0,0,1,0};
     private float[] last_Matrix;
+    private float[] ex_matrix = new float[16];
+    private float[] single_rotate_matrix = new float[16];
     public int mmode = 0;
     public GokuGroup(PlaneGlSurfaceView scene,int type) {
         super(scene);
@@ -140,12 +143,26 @@ public class GokuGroup extends GLGroup {
 //        matrixState.rotate(this.getSpriteAngleZ(), 0, 0, 1);//z axis
         //rotate
         if(mmode==0){ //初始随机转
-//            matrixState.rotate(-90f,0,0,1); // pitch
-            matrixState.rotate(rotate_info[3],0,1,0); // yaw
+            ex_matrix = matrixState.getMMatrix().clone();
+//            matrixState.rotate(-90f,0,1,0); // yaw
+            matrixState.rotate(45,1,0,0); // roll
+            matrixState.rotate(-45,0,0,1); // yaw
+            matrixState.rotate(-30,0,1,0); // yaw
 
-            matrixState.rotate(rotate_info[3],1,0,0); // roll
+
+//            Matrix.setRotateM(ex_matrix, 0, 0, 1, 0, 0);
+            Matrix.rotateM(ex_matrix,0,-30,0,1,0);
+            Matrix.rotateM(ex_matrix,0,-45,0,0,1);
+            Matrix.rotateM(ex_matrix,0,45,1,0,0);
+            // 1,0,0 -> pitch
+            // 0,1,0 -> yaw
+            // 0,0,1 -> roll
+            Log.e("ex_matrix========",Arrays.toString(ex_matrix));
             // 记录最后一帧的姿态矩阵
+//            matrixState.setCurrMatrix(ex_matrix);
             last_Matrix = matrixState.getMMatrix().clone();
+
+            Log.e("in_matrix========",Arrays.toString(last_Matrix));
         }
         else if(mmode == 1) //yaw
         {
@@ -153,24 +170,41 @@ public class GokuGroup extends GLGroup {
             matrixState.setCurrMatrix(last_Matrix);
             Log.e("PrintDemo",Arrays.toString(last_Matrix));
             //随便转转
-            matrixState.rotate(rotate_info[3],0,0,1);
-//            Log.i("PrintDemo", Arrays.toString(matrixState.getMMatrix()));
-//            matrixState.rotate(90,0,0,1);
-//            matrixState.rotate(90,1,0,0);
-//            matrixState.rotate(90,0,0,1);
-//            matrixState.rotate(90,1,0,0);
+            Matrix.setRotateM(single_rotate_matrix,0,rotate_info[3],0,1,0);
+            Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
+//            matrixState.rotate(rotate_info[3],0,0,1);
+            matrixState.setCurrMatrix(single_rotate_matrix.clone());
+
         }
         else if(mmode == 2) //pitch
         {
-            matrixState.rotate(rotate_info[2],0,0,1);
+            //把当前矩阵的姿态矩阵设置为之前最后一帧的姿态矩阵，然后根据此进行旋转
+            matrixState.setCurrMatrix(last_Matrix);
+            Log.e("PrintDemo",Arrays.toString(last_Matrix));
+            //随便转转
+            Matrix.setRotateM(single_rotate_matrix,0,rotate_info[3],1,0,0);
+            Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
+//            matrixState.rotate(rotate_info[3],0,0,1);
+            matrixState.setCurrMatrix(single_rotate_matrix.clone());
         }
-        else if(mmode == 3)
+        else if(mmode == 3) //roll
         {
-            matrixState.rotate(rotate_info[1],1,0,0);
+            //把当前矩阵的姿态矩阵设置为之前最后一帧的姿态矩阵，然后根据此进行旋转
+            matrixState.setCurrMatrix(last_Matrix);
+            Log.e("PrintDemo",Arrays.toString(last_Matrix));
+            //随便转转
+            Matrix.setRotateM(single_rotate_matrix,0,rotate_info[3],0,0,1);
+            Matrix.multiplyMM(single_rotate_matrix,0,single_rotate_matrix,0,last_Matrix,0);
+//            matrixState.rotate(rotate_info[3],0,0,1);
+            matrixState.setCurrMatrix(single_rotate_matrix.clone());
+        }
+        else if(mmode == 4) //当一段动作停止后，记录最后一帧的旋转矩阵
+        {
+            last_Matrix = matrixState.getFinalMatrix().clone();
         }
         else
         {
-            matrixState.rotate2(rotate_info[3],0,1,0);
+            matrixState.rotate(90,0,1,0);
 //        matrixState.rotate2(rotate_info[2],0,0,1);
 //        matrixState.rotate2(rotate_info[1],1,0,0);
         }

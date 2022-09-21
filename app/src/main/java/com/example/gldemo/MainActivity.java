@@ -4,7 +4,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,11 +34,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean first_abs = true;
     private boolean first_rela = true;
     private boolean isrun= true;
+    public String str_res;
 
     private float[] target_pose = {0.0f,0.0f,0.0f}; //target pose : yaw,pitch,roll
     private float[] current_pose = {0.0f,0.0f,0.0f}; // target pose: yaw,pitch,roll
@@ -79,6 +87,67 @@ public class MainActivity extends AppCompatActivity {
     //
     private GokuRenderer gokuRenderer;
     private GokuRenderer otherRenderer;
+
+    /** TCP Client**/
+    public static Context context ;
+    private class MyHandler extends android.os.Handler{
+        private WeakReference<MainActivity> mActivity;
+
+        MyHandler(MainActivity activity){
+            mActivity = new WeakReference<MainActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            if (mActivity != null){
+                switch (msg.what){
+                    case 1:
+//                        txtRcv.append(msg.obj.toString());
+//                        Log.e("1","arrive this");
+                        str_res = msg.obj.toString();
+
+//                        txtRcv.setText(msg.obj.toString());
+                        break;
+
+                }
+            }
+        }
+    }
+    private static TcpClient tcpClient = null;
+    private final MyHandler myHandler = new MyHandler(this);
+//    private int cnt = 0;
+    private MyBroadcastReceiver myBroadcastReceiver = new MyBroadcastReceiver();
+    private void bindReceiver(){
+        IntentFilter intentFilter = new IntentFilter("tcpClientReceiver");
+        registerReceiver(myBroadcastReceiver,intentFilter);
+    }
+    private class MyBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String mAction = intent.getAction();
+            switch (mAction){
+                case "tcpClientReceiver":
+                    String msg = intent.getStringExtra("tcpClientReceiver");
+                    Message message = Message.obtain();
+                    message.what = 1;
+                    message.obj = msg;
+                    myHandler.sendMessage(message);
+                    break;
+            }
+        }
+    }
+    ExecutorService exec = Executors.newCachedThreadPool();
+    private int getPort(String msg){
+        if (msg.equals("")){
+            msg = "1234";
+        }
+        return Integer.parseInt(msg);
+    }
+
+
+
+
     /**开始计时方法*/
     public int cnt = 0;
     private long startTime , endTime ,runTime ;
@@ -110,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
             float[] last_angles = mdata.test[cnt];
+//            Log.e("tcp",str_res);
+//            get_tcp_recieve();
             readFile("/Download/mypose.txt");
             float[] a = new float[16];
             float[] b = {-2.1855695E-7f, 0.0f, -5.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 5.0f, 0.0f, -2.1855695E-7f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -138,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     relative_yaw = last_angles[1];
 //                    mGLView.MyDraw(gokuRenderer, -90 + now_pitch+ 15.0f, 0, -now_yaw);
                     //1->pitch 2->roll 3->yaw
+//                    Log.e("clinet",tcpClient.mypose);
                     mGLView.MyDraw(gokuRenderer,  0+now_pitch, 0,90+now_yaw,1);
 //                    mGLView.MyDraw(gokuRenderer, 0, delta_roll_pitch,delta_yaw,mode);
                     Log.v("rela",String.format("yaw: %.2f,pitch:%.2f",now_yaw,now_pitch));
@@ -163,9 +235,9 @@ public class MainActivity extends AppCompatActivity {
 //                Log.e("delta",String.format("yaw: %.2f,pitch:%.2f,mode:%d",delta_yaw,delta_roll_pitch ,mode));
             }
             startTime();//执行计时方法
-            float e1 = (float)Math.abs(cur_angles[0]+90f);
-            float e2 = (float)Math.abs(cur_angles[1]);
-            float e3 = (float)Math.abs(cur_angles[2]);
+            float e1 = (float)Math.abs(cur_angles[0]);
+            float e2 = (float)Math.abs(cur_angles[1]-90f);
+            float e3 = (float)Math.abs(cur_angles[2]-90f);
             Log.e("error,yaw,pitch,roll",String.format("yaw_error: %.2f,pitch_error:%.2f,roll_errore:%.2f",e1,e2,e3));
             float sum = e1+e2+e3;
 
@@ -244,11 +316,13 @@ public class MainActivity extends AppCompatActivity {
 //        if(rotate[3][1]!=1 || rotate[3][1]!=-1){
 //
 //        }else{
-            if(Math.abs(Math.asin(rotate[2][0]))<(Math.PI-Math.asin(rotate[2][0]))){
-                cur_angles[0] = (float)Math.asin(rotate[2][0]);
+        Log.e("debug",String.format("%.2f,%.2f",-(float)Math.asin(rotate[2][0]),(float)(Math.PI+Math.asin(rotate[2][0]))));
+            if(Math.abs(Math.asin(rotate[2][0]))<Math.abs(Math.PI+Math.asin(rotate[2][0]))){
+                cur_angles[0] = -(float)Math.asin(rotate[2][0]);
+
             }
             else{
-                cur_angles[0] = (float)(Math.PI-Math.asin(rotate[2][0]));
+                cur_angles[0] = (float)(Math.PI+Math.asin(rotate[2][0]));
             }
 
             cur_angles[1] = (float)Math.atan2(rotate[2][1]/Math.cos(cur_angles[0]),rotate[2][2]/Math.cos(cur_angles[0]));
@@ -385,6 +459,113 @@ public class MainActivity extends AppCompatActivity {
             return ;
         }
     }
+
+    public void get_tcp_recieve(){
+        String result = str_res;
+        int n = str_res.length();
+//        if (result.ser("\n")){
+//
+//            mode = 8;
+//            return;
+//        }
+        String [] arr = result.split("\\s+");
+//            for(int i = 0;i<arr.length;i++){
+//                System.out.println(arr[i]);
+//                if(i==2||i==3){
+//                    float yaw = Float.parseFloat(arr[i]);
+//                    System.out.println(yaw);
+//                }
+//            }
+        int nn = arr.length;
+
+        if(arr.length >= 3){
+            //yaw,pitch,roll
+            if (Float.parseFloat(arr[nn-3])!=0){
+                delta_yaw = Float.parseFloat(arr[nn-3]);
+                temp[0] = delta_yaw;
+                mode = 1;
+            }else if(Float.parseFloat(arr[nn-2])!=0){
+                delta_roll_pitch = Float.parseFloat(arr[nn-2]);
+                temp[1] = delta_roll_pitch;
+                mode = 2;
+            }else if(Float.parseFloat(arr[nn-1])!=0){
+                delta_roll_pitch = Float.parseFloat(arr[nn-1]);
+                temp[2] = delta_roll_pitch;
+                mode = 3;
+            }else if(Float.parseFloat(arr[nn-3]) ==0 && Float.parseFloat(arr[nn-2]) ==0 && Float.parseFloat(arr[nn-1]) ==0){
+                mode = 4;
+                current_pose[0] = current_pose[0] + temp[0];
+                current_pose[1] = current_pose[1] + temp[1];
+                current_pose[2] = current_pose[2] + temp[2];
+                temp[0] = 0.0f;
+                temp[1] = 0.0f;
+                temp[2] = 0.0f;
+                return;
+            }else{
+                mode = 7;
+                return;
+            }
+        }
+        else{
+            mode = 8;
+            return;
+        }
+//            if(arr[0].equals("init")){
+//                if(arr[1].equals("yaw")){
+//                    init_yaw = Float.parseFloat(arr[2]);
+//                    mode = 1;
+//                }else if(arr[1].equals("pitch")){
+//                    init_roll_pitch = Float.parseFloat(arr[3]);
+//                    mode =2;
+//                }else if(arr[1].equals("roll")){
+//                    init_roll_pitch = Float.parseFloat(arr[3]);
+//                    mode = 3;
+//                }else{
+//                    ;
+//                }
+//                isrun = true;
+//            }
+//            else if(arr[0].equals("null")){
+//                if(isrun){
+//                    mode = 4;
+//                    isrun = false;
+//                }
+//                else{
+//                    mode = 5;
+//                }
+//
+//            }
+//            else if(arr[0].length()>0){
+//                delta_yaw = Float.parseFloat(arr[0]) - init_yaw;
+//                delta_roll_pitch = Float.parseFloat(arr[1]) - init_roll_pitch;
+//
+//            }
+
+
+
+//    }catch (FileNotFoundException e){
+//        Log.w("warning","no find22222");
+////            if(isrun){
+////                mode = 4;
+////                isrun = false;
+////            }
+////            else{
+////                mode = 5;
+////            }
+//        mode = 8;
+//        return ;
+//
+//    } catch (UnsupportedEncodingException e) {
+////            e.printStackTrace();
+//        mode = 8;
+//        return ;
+//    } catch (IOException e) {
+//        mode = 8;
+////            e.printStackTrace();
+//        return ;
+//    }
+
+    }
     /**开始计时方法*/
 
     private void startTime(){
@@ -410,6 +591,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
 
         if (getSupportActionBar() != null){
             getSupportActionBar().hide();
@@ -466,6 +648,11 @@ public class MainActivity extends AppCompatActivity {
                 stopTime();
             }
         });
+//        bindReceiver();
+        String serverip = "192.168.3.132";
+        String port = "8081";
+//        tcpClient = new TcpClient(serverip,getPort(port));
+//        exec.execute(tcpClient);
 
     }
     @Override

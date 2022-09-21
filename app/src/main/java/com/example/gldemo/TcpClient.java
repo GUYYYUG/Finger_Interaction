@@ -41,7 +41,7 @@ public class TcpClient implements Runnable{
     byte buff[]  = new byte[4096];
     private String rcvMsg;
     private int rcvLen;
-
+    public String mypose;
 
 
     public TcpClient(String ip , int port){
@@ -120,7 +120,8 @@ public class TcpClient implements Runnable{
                 Intent intent =new Intent();
                 intent.setAction("tcpClientReceiver");
                 intent.putExtra("tcpClientReceiver",rcvMsg);
-//                FuncTcpClient.context.sendBroadcast(intent);//将消息发送给主界面
+//                mypose = rcvMsg;
+                MainActivity.context.sendBroadcast(intent);//将消息发送给主界面
                 if (rcvMsg.equals("QuitClient")){   //服务器要求客户端结束
                     isRun = false;
                 }
